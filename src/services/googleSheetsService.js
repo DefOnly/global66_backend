@@ -10,14 +10,28 @@ class GoogleSheetsService {
   async getAuth() {
     if (this.auth) return this.auth
 
-    const credentialsPath = process.env.GOOGLE_CREDENTIALS_PATH ||
-      path.join(__dirname, '../../credentials/service-account.json')
-
     try {
-      this.auth = new google.auth.GoogleAuth({
-        keyFile: credentialsPath,
-        scopes: ['https://www.googleapis.com/auth/spreadsheets']
-      })
+      let credentials
+
+      // Prioridad 1: Usar JSON desde variable de entorno (Vercel/Production)
+      if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+        credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
+        this.auth = new google.auth.GoogleAuth({
+          credentials,
+          scopes: ['https://www.googleapis.com/auth/spreadsheets']
+        })
+      }
+      // Prioridad 2: Usar archivo local (Desarrollo)
+      else {
+        const credentialsPath = process.env.GOOGLE_CREDENTIALS_PATH ||
+          path.join(__dirname, '../../credentials/service-account.json')
+
+        this.auth = new google.auth.GoogleAuth({
+          keyFile: credentialsPath,
+          scopes: ['https://www.googleapis.com/auth/spreadsheets']
+        })
+      }
+
       return this.auth
     } catch (error) {
       console.error('Error initializing Google Auth:', error.message)

@@ -13,9 +13,17 @@ app.use(cors({
     const allowedOrigins = [
       'http://localhost:3000',
       'http://192.168.43.1:3000',
-      'http://127.0.0.1:3000'
+      'http://127.0.0.1:3000',
+      process.env.FRONTEND_URL,
+      /\.vercel\.app$/  // Permite todos los dominios de Vercel
     ]
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) {
+      callback(null, true)
+    } else if (allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') return allowed === origin
+      if (allowed instanceof RegExp) return allowed.test(origin)
+      return false
+    })) {
       callback(null, true)
     } else {
       callback(new Error('Not allowed by CORS'))
